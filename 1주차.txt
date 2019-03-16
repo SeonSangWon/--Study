@@ -1,0 +1,123 @@
+1차 직무평가 : 40%
+2차 직무평가 : 40%
+출석 : 20%
+
+함수부분까지 1차직무평가 범위
+---------------------------------------------
+PL/SQL의 종류
+
+-Anonymous Procedure
+-프로시저(Stored Procedure)
+-함수(Stored Function)
+-패키지(Package)
+-트리거(Trigger)
+
+트리거(Insert,Update,Delete 실행문 실행 시,
+자동으로 실행됌)
+---------------------------------------------
+블록의 구조
+
+DECLARE(생략가능) / BEGIN / EXCEPTION / END
+
+선언부 : DECLARE ~ BEGIN
+
+실행부 : BEGIN ~ END
+
+예외처리부 : EXCEPTION ~ END
+---------------------------------------------
+>>dbms_output.put_line
+화면에 글자를 출력하고자 할 때 사용.
+
+SQL> BEGIN
+	dbms_output.put_line('PL/SQL');
+END;
+/
+>> 실행 불가
+
+>>Set ServerOutput On	<<SQL+명령어 ;사용x
+
+BEGIN
+	dbms_output.put_line('PL/SQL');
+END;
+/
+
+>> PL/SQL 출력
+---------------------------------------------
+BEGIN
+	dbms_output.put_line
+('PL/SQL' || 9999 || sysdate);
+END;
+/
+
+>> 출력 성공 (||결합연산자 사용)
+---------------------------------------------
+환경변수 (SQL+)
+- Set ServerOutput On
+dbms_output.put_line를 이용한 결과를
+화면에 나타나게끔 함
+
+- Set Lines 140
+
+- Set Pages 24
+---------------------------------------------
+변수
+- 하나의 변수에 하나의 값 만을 저장
+
+-세미클론 사용하여 각 라인의 선언 종료
+-30자 이내, 반드시 문자로 시작
+-일반적으로 변수명은 v_ 로 사용
+-변수에 초기값을 할당하지 않으면 NULL로 초기화
+-대소문자 구분 X (데이터에만 구분)
+
+DECALRE
+ v_a NUMBER(3);
+>>v_a변수에 number(3)타입 할당
+---------------------------------------------
+대치문
+
+-할당 연산자(:=)를 사용하여 값을 지정
+
+변수명 := 값;
+
+v_a := 10;
+>v_a변수에 10할당
+
+DECALRE
+	v_su1 number(2) := 20;
+	v_su2 number(2) := 30;
+	v_sum number(3);
+BEGIN
+	v_sum := v_su1 + v_su2;
+	dbms_output.put_line(v_sum);
+END;
+---------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
