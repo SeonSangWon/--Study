@@ -1,0 +1,186 @@
+1. DEPT학번 테이블을 변경
+   1) deptno 칼럼에 PK 제약조건 추가
+Alter Table dept201507046
+Add Constraint dept201507046_deptno_pk Primary Key(deptno)
+
+2. EMP학번 테이블을 변경
+   1) empno 칼럼에 PK 제약조건 추가
+Alter Table emp201507046
+Add Constraint emp201507046_empno_pk Primary Key(empno)
+	  
+   2) deptno 칼럼에 FK 제약조건 추가(DEPT학번 테이블의 deptno 칼럼 참조)
+Alter Table emp201507046
+Add Constraint emp201507046_deptno_fk Foreign Key(deptno)
+References dept201507046(deptno)
+
+
+3. EMP학번 테이블과 DEPT학번 테이블을 이용해서 실행 시 입력받은 사원번호에 해당하는 사원의 사원이름과 부서이름을 출력하는 프로시저 작성
+
+Create OR REPLACE PROCEDURE p_one(v_empno number)
+IS
+	v_ename emp201507046.ename%TYPE;
+	v_dname dept201507046.dname%TYPE;
+BEGIN
+	Select e.ename, d.dname
+	Into v_ename, v_dname
+	From emp201507046 e, dept201507046 d
+	Where e.deptno = d.deptno AND e.empno = v_empno;
+	dbms_output.put_line('<<  조회결과  >>');
+	dbms_output.put_line('사원 이름 : ' || v_ename);
+	dbms_output.put_line('부서 이름 : ' || v_dname);
+
+EXCEPTION
+	WHEN NO_DATA_FOUND THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러내용 : 조회된 데이터가 없습니다!!');
+	WHEN TOO_MANY_ROWS THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러내용 : 조회 데이터가 너무 많습니다.');
+	WHEN OTHERS THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러코드 : ' || TO_CHAR(SQLCODE));
+	 dbms_output.put_line('에러메시지 : ' || SQLERRM);
+END;
+/
+
+
+2) 사원번호 7499의 값을 입력받아 프로시저 실행한 후 결과 값 확인
+EXECUTE p_one(7499);
+
+3) 사원번호 7777의 값을 입력받아 프로시저 실행한 후 결과 값 확인
+EXECUTE p_one(7777);
+
+
+4. EMP학번 테이블을 이용해서 실행 시 입력받은 사원번호에 해당하는 사원의 부서번호와 같은 사원들의 사원이름과 급여를 출력하는 프로시저 작성
+Create OR REPLACE PROCEDURE p_two(v_empno number)
+IS
+	v_ename emp201507046.ename%TYPE;
+	v_sal emp201507046.sal%TYPE;
+	
+BEGIN
+	Select ename, sal
+	Into v_ename, v_sal
+	From emp201507046
+	Where deptno = (Select deptno
+			From emp201507046
+			Where empno = v_empno);
+	dbms_output.put_line('<<< 조회결과 >>>');
+	dbms_output.put_line('사원 이름 : ' || v_ename);
+	dbms_output.put_line('급     여 : ' || v_sal);
+EXCEPTION
+	WHEN NO_DATA_FOUND THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러내용 : 조회된 데이터가 없습니다!!');
+	WHEN TOO_MANY_ROWS THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러내용 : 조회 데이터가 너무 많습니다.');
+	WHEN OTHERS THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러코드 : ' || TO_CHAR(SQLCODE));
+	 dbms_output.put_line('에러메시지 : ' || SQLERRM);
+END;
+/
+
+2) 사원번호 7782의 값을 입력받아 프로시저 실행한 후 결과 값 확인
+EXECUTE p_two(7782);
+
+
+5. 아래와 같은 내용들을 만족하는 블록 생성
+  i) emp학번 테이블에서 부서번호가 10인 사원들의 부서번호를 10을 더하여 수정하고 
+     데이터 처리 개수를 출력
+  ii) emp학번 테이블에서 부서번호가 40인 사원들의 부서번호를 10으로 수정하고 
+     데이터 처리 개수를 출력
+  iii) emp학번 테이블에서 부서번호를 50으로 수정하고 데이터 처리 개수를 출력
+
+DECLARE
+	v_deptno emp201507046.deptno%TYPE;
+	v_count number;
+BEGIN
+	Select COUNT(*)
+	Into v_count
+	From emp201507046
+	Where deptno = 10;
+
+	Update emp201507046
+	Set deptno = deptno + 10
+	Where deptno = 10;
+	dbms_output.put_line('<<< 처리 결과 >>>');
+	dbms_output.put_line('데이터 처리 갯수 : ' || v_count);
+
+	v_count := 0;
+
+	Select COUNT(*)
+	Into v_count
+	From emp201507046
+	Where deptno = 40;
+
+	Update emp201507046
+	Set deptno = 10
+	Where deptno = 40;
+
+	dbms_output.put_line('<<< 처리 결과 >>>');
+	dbms_output.put_line('데이터 처리 갯수 : ' || v_count);
+
+	v_count := 0;
+
+	Select COUNT(*)
+	Into v_count
+	From emp201507046
+	Where deptno = 50;
+
+	Update emp201507046
+	Set deptno = 50;
+EXCEPTION
+	WHEN OTHERS THEN
+	 dbms_output.put_line('<<< ERROR >>>');
+	 dbms_output.put_line('에러코드 : ' || TO_CHAR(SQLCODE));
+	 dbms_output.put_line('에러메시지 : ' || SQLERRM);
+END;
+/
+
+2) 블록을 실행한 후 결과 값 확인
+
+
+3) EMP학번 테이블의 변경사항 무효화
+ROLLBACK;
+
+
+6. 실행 시 부서번호를 입력받아 dept학번 테이블에서 삭제하는 프로시저 작성
+조건 : 부서번호가 10, 20, 30 인 경우 사용자 정의 예외로 처리하여
+ “emp학번 테이블에서 참조하므로 삭제가 불가능 합니다” 라는 메시지를
+ 출력하고, 부서번호가 40인 경우에는 삭제
+
+Create OR REPLACE PROCEDURE p_three(v_deptno number)
+IS
+	delete_deptno EXCEPTION;
+BEGIN
+	IF v_deptno = 10 THEN	
+		RAISE delete_deptno;
+	ELSIF v_deptno = 20 THEN
+		RAISE delete_deptno;
+	ELSIF v_deptno = 30 THEN
+		RAISE delete_deptno;
+	ELSIF v_deptno = 40 THEN
+		dbms_output.put_line(v_deptno || '번 부서를 삭제합니다.');
+		Delete From emp201507046
+		Where deptno = v_deptno;
+	END IF;
+EXCEPTION
+	WHEN delete_deptno THEN
+	 dbms_output.put_line('emp학번 테이블에서 참조하므로 삭제가 불가능합니다.');
+END;
+/
+
+
+2) 부서번호 10의 값을 입력받아 프로시저 실행한 후 결과 값 확인
+EXECUTE p_three(10);
+3) 부서번호 40의 값을 입력받아 프로시저 실행한 후 결과 값 확인
+EXECUTE p_three(40);
+4) EMP학번 테이블의 변경사항 무효화
+ROLLBACK;
+
+
+
+
+
+
