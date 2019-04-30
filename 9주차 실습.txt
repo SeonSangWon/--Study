@@ -1,0 +1,107 @@
+1. EMPEX학번 이름으로 아래의 테이블을 생성하여라.
+Create Table empex201507046(
+empno number(4) NOT NULL,
+ename varchar2(20),
+job varchar2(20),
+Primary Key(empno)
+);
+
+
+2. EMPEX학번 테이블에 데이터가 입력될 때마다 화면에 “신입 사원이  입사했습니다.”라는
+메시지가 출력되게 트리거 EMPEX학번_TRIGGER_INS를 생성하여라.
+Create OR REPLACE TRIGGER empex201507046_trigger_ins
+AFTER INSERT
+ON empex201507046
+BEGIN
+	dbms_output.put_line('신입 사원이 입사했습니다.');
+END;
+
+
+3. 데이터 (1, 홍길동, 판매)를 입력하고 트리거가 수행된 것을 확인하여라.
+INSERT INTO empex201507046 VALUES(1, '홍길동', '판매');
+
+
+4. EMPSAL학번 이름으로 아래의 테이블을 생성하여라.
+Create Table empsal201507046(
+salno number(4) not null,
+sal number(7,2),
+empno number(4),
+Primary Key(salno),
+Constraint empsal201507046_empno_fk Foreign Key(empno) References empex201507046(empno)
+)
+
+
+5. EMPEX학번 테이블에 새로운 데이터를 추가하면 EMPSAL학번 테이블에 자동적으로 데이터를 추가하는 트리거 EMPSAL학번_TRIGGER_INS를 생성하여라. (SALNO는 1부터 1씩 자동으로 증가하도록 시퀀스 empsal학번_salno_seq를 사용하고, SAL은 기본값 1000을 입력한다.)
+
+1) 시퀀스 empsal학번_salno_seq(1부터 1씩 자동으로 증가)를 생성하여라.
+Create Sequence empsal201507046_salno_seq
+Increment By 1;
+
+2) EMPEX학번 테이블에 새로운 데이터를 추가하면 EMPSAL학번 테이블에 자동적으로 데이터를 추가하는 트리거 EMPSAL학번_TRIGGER_INS를 생성하여라.
+(SALNO는 1부터 1씩 자동으로 증가하도록 시퀀스 empsal학번_salno_seq를 사용하고, SAL은 기본값 1000을 입력한다.)
+Create OR REPLACE TRIGGER empsal201507046_trigger_ins
+AFTER INSERT 
+ON empex201507046
+FOR EACH ROW
+BEGIN
+	INSERT INTO empsal201507046
+	VALUES(empsal201507046_salno_seq.NEXTVAL, 1000, :new.empno);
+END;
+/
+
+
+6. EMPEX학번 테이블에 데이터 (111, 이순신, 군인)를 입력하여라.
+INSERT INTO empex201507046 VALUES(111, '이순신', '군인');
+
+
+7. 트리거 EMPSAL학번_TRIGGER_INS이 수행된 것을 확인하기 위해 EMPEX학번 테이블과 EMPSAL학번 테이블의 데이터를 조회하여라.
+Select * From empex201507046;
+
+Select * From empsal201507046;
+
+
+8. EMPEX학번 테이블에 데이터 (222, 김민수, 학생)을 입력하여라.
+INSERT INTO empex201507046 VALUES(222, '김민수', '학생');
+
+
+9. 트리거 EMPSAL학번_TRIGGER_INS이 수행된 것을 확인하기 위해 EMPEX학번 테이블과 EMPSAL학번 테이블의 데이터를 조회하여라.
+Select * From empex201507046;
+
+Select * From empsal201507046;
+
+
+10. EMPEX학번 테이블의 데이터가 삭제될 때 마다 EMPSAL학번 테이블에서도 해당하는 데이터가
+함께 삭제되게 하는 트리거 EMPSAL학번_TRIGGER_DEL를 생성하여라.
+Create OR REPLACE TRIGGER empsal201507046_trigger_del
+AFTER DELETE
+ON empex201507046
+FOR EACH ROW
+BEGIN
+	DELETE FROM empsal201507046
+	Where empno = :old.empno;
+END;
+
+
+11. EMPEX학번 테이블로부터 EMPNO = 111인 데이터를 삭제하여라.
+Delete From empex201507046
+Where empno = 111;
+
+
+12. 트리거 EMPSAL학번_TRIGGER_DEL이 수행된 것을 확인하기 위해 EMPEX학번
+ 테이블과 EMPSAL학번 테이블의 데이터를 조회하여라.
+Select * From empex201507046;
+
+Select * From empsal201507046;
+
+
+13. EMPEX학번 테이블로부터 EMPNO = 222인 데이터를 삭제하여라.
+Delete From empex201507046
+Where empno = 222;
+
+
+14. 트리거 EMPSAL학번_TRIGGER_DEL이 수행된 것을 확인하기 위해 
+EMPEX학번 테이블과 EMPSAL학번 테이블의 데이터를 조회하여라.
+Select * From empex201507046;
+
+Select * From empsal201507046;
+
