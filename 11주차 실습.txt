@@ -1,0 +1,239 @@
+Create Table subject201507046(
+subno char(3) not null,
+subname varchar2(30),
+subprof varchar2(12),
+subcredit number(1),
+subgrade number(1),
+subdept varchar2(20),
+Primary Key(subno)
+);
+
+Insert into subject201507046 
+Values('&subno', '&subname', '&subprof', &subcredit, &subgrade, '&subdept');
+
+--------------------------------------------------------------------------------------------------
+
+Create Table enrol201507046(
+subno char(3) not null,
+no char(9) not null,
+grade number(3),
+Constraint enrol201507046_subno_no_pk Primary Key(subno, no)
+);
+
+
+Insert into enrol201507046 Values('&subno', '&no', &grade);
+
+--------------------------------------------------------------------------------------------------
+
+Create OR REPLACE FUNCTION f1_201507046(v_jumsu number)RETURN number
+IS
+	v_avgJumsu number;
+BEGIN
+	IF v_jumsu > 100 THEN
+		v_avgJumsu := -1.0;
+	ELSIF v_jumsu >= 95 THEN
+		v_avgJumsu := 4.5;
+	ELSIF v_jumsu >= 90 THEN
+		v_avgJumsu := 4.0;
+	ELSIF v_jumsu >= 85 THEN
+		v_avgJumsu := 3.5;
+	ELSIF v_jumsu >= 80 THEN
+		v_avgJumsu := 3.0;	
+	ELSIF v_jumsu >= 75 THEN
+		v_avgJumsu := 2.5;
+	ELSIF v_jumsu >= 70 THEN
+		v_avgJumsu := 2.0;
+	ELSIF v_jumsu >= 65 THEN
+		v_avgJumsu := 1.5;
+	ELSIF v_jumsu >= 60 THEN
+		v_avgJumsu := 1.0;
+	ELSIF v_jumsu  >= 0 THEN
+		v_avgJumsu := 0;
+	ELSE
+		v_avgJumsu := -1.0;
+	END IF;
+RETURN v_avgJumsu;
+END f1_201507046;
+/
+	
+VARIABLE AVG NUMBER
+EXEC :AVG := f1_201507046(101);
+EXEC :AVG := f1_201507046(95);
+EXEC :AVG := f1_201507046(90);
+EXEC :AVG := f1_201507046(85);
+EXEC :AVG := f1_201507046(80);
+EXEC :AVG := f1_201507046(75);
+EXEC :AVG := f1_201507046(70);
+EXEC :AVG := f1_201507046(65);
+EXEC :AVG := f1_201507046(60);
+EXEC :AVG := f1_201507046(55);
+EXEC :AVG := f1_201507046(-3);
+PRINT AVG;
+
+--------------------------------------------------------------------------------------------------
+
+Create Table sumgde201507046(
+no number(9) not null,
+acrd number(2),
+gcrd number(2),
+totsco number(4,1),
+avgsco number(3,2),
+Primary Key(no)
+);
+
+
+Create OR REPLACE PROCEDURE p1_201507046(v_no number)
+IS
+	v_subno enrol201507046.subno%TYPE;
+	v_grade enrol201507046.subno%TYPE;
+	v_subcredit subject201507046.subcredit%TYPE;
+	v_acrd sumgde201507046.acrd%TYPE := 0;
+	v_gcrd sumgde201507046.gcrd%TYPE := 0;
+	v_totsco sumgde201507046.totsco%TYPE := 0;
+	v_avgsco sumgde201507046.avgsco%TYPE := 0;
+	v_avg number := 0;
+	CURSOR sangwon_cursor IS
+	Select subno, grade
+	From enrol201507046
+	Where no = v_no;
+BEGIN
+	OPEN sangwon_cursor;
+	LOOP
+	FETCH sangwon_cursor Into v_subno, v_grade;
+	EXIT WHEN sangwon_cursor%NOTFOUND;
+		Select subcredit
+		Into v_subcredit
+		From subject201507046
+		Where subno = v_subno;
+
+		v_acrd := v_acrd + v_subcredit;
+		v_avg := f1_201507046(v_grade);
+		IF v_avg >= 1 THEN
+			v_gcrd := v_gcrd + v_subcredit;
+			v_totsco := v_totsco + v_subcredit * v_avg;
+		END IF;
+	END LOOP;
+CLOSE sangwon_cursor;
+	v_avgsco := v_totsco / v_acrd;
+	
+	Insert Into sumgde201507046 Values(v_no, v_acrd, v_gcrd, v_totsco, v_avgsco);
+END;
+/
+
+EXEC p1_201507046(20132003);
+EXEC p1_201507046(20151062);
+EXEC p1_201507046(20153088);
+EXEC p1_201507046(20131001);
+Select * From sumgde201507046;
+
+--------------------------------------------------------------------------------------------------
+
+Create Table enrolcnt201507046(
+subno char(3),
+subcnt number(2)
+);
+
+
+Create OR REPLACE PROCEDURE p2_201507046
+AS
+BEGIN
+	Insert into enrolcnt201507046
+	Select subno, count(*)
+	From enrol201507046
+	Group by subno;
+END;
+/
+	
+Select * From enrolcnt201507046;
+
+
+Create OR REPLACE TRIGGER t1_201507046
+AFTER INSERT or UPDATE or DELETE
+ON enrol201507046
+FOR EACH ROW
+BEGIN
+	IF Inserting THEN
+		Update enrolcnt201507046
+		Set subcnt =subcnt + 1
+		Where subno = :new.subno;
+	ELSIF Updating THEN
+		Update enrolcnt201507046
+		Set subcnt = subcnt - 1 
+		Where subno = :old.subno;
+		Update enrolcnt201507046
+		Set subcnt = subcnt + 1
+		Where subno = :new.subno;
+	ELSIF Deleting THEN
+		Update enrolcnt201507046
+		Set subcnt = subcnt - 1 
+		Where subno = :old.subno;
+	END IF;
+END;
+/
+	
+---------------------------
+Update enrol201507046
+Set subno = 103
+Where subno = 102 AND no = 20153075;
+
+Select * From enrolcnt201507046;
+
+---------------------------
+Delete From enrol201507046
+Where subno = 103 AND no = 20152088;
+
+Select * From enrolcnt201507046;
+
+---------------------------
+Insert Into enrol201507046 Values('101', '20153088', 45);
+
+Select * From enrolcnt201507046;
+
+---------------------------
+Create OR REPLACE Package pack_201507046
+IS
+PROCEDURE subject(v_no number);
+END;
+/
+
+PROCEDURE subject(v_subno varchar);
+
+Create OR REPLACE Package BODY pack_201507046
+IS
+PROCEDURE subject(v_no number)
+IS
+	v_subname subject201507046.subname%TYPE;
+	v_subcredit subject201507046.subcredit%TYPE;
+	v_subno enrol201507046.subno%TYPE;
+	CURSOR sangwon_cursor IS
+	Select subname, subcredit
+	From subject201507046
+	Where subno = (Select subno
+		From enrol201507046
+		Where no = v_no);
+BEGIN
+	OPEN sangwon_cursor;
+	dbms_output.put_line('과목이름	/	학점');
+	LOOP
+	FETCH sangwon_cursor Into v_subname, v_subcredit;	
+	EXIT WHEN sangwon_cursor%NOTFOUND;
+
+	dbms_output.put_line(v_subname || '	' || v_subcredit);
+	END LOOP;
+CLOSE sangwon_cursor;
+END;
+END;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
