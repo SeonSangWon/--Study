@@ -1,0 +1,23 @@
+서브쿼리를 사용한 데이터 추가
+-INSERT INTO절에 VALUES 대신 서브쿼리 사용
+
+구문
+INSERT INTO 테이블명(칼럼명, 칼럼명, ...)
+AS
+서브쿼리;
+
+Create Table dept2(
+deptno , dname , loc
+);
+
+INSERT INTO dept2
+AS
+Select * From dept;
+>>dept테이블의 모든 내용을 dept2테이블에 추가
+
+INSERT INTO dept2(deptno, loc)
+AS
+Select deptno, loc From dept;
+>>dept테이블의 deptno칼럼과 loc칼럼을 dept2테이블에 추가
+※칼럼명이 같을 필요없다. 구조만 비슷하다면 사용가능.
+
