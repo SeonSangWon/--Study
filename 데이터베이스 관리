@@ -15,3 +15,16 @@ Reorg : 일종의 디스크 모음, DB 의 데이터블록을 효율적으로 �
   - 단점 : TABLE 간의 JOIN 에 대한 비용이 증가한다.
            TABLE 과 INDEX 를 별도로 Partition 할 수는 없다.
            TABLE 과 INDEX 를 같이 Partitioning 해야한다.
+
+HWM(고수위, High Water Mark)
+ - Extent 확장의 기준, 모든 Segment 에 하나씩 존재
+ - 1 번에 5 개의 데이터 블록 단위로 HWM 이동
+ - Full Scan 수행 시, HWM 앞의 모든 데이터 블록을 액세스
+ - Data 가 적은데, Full Scan 시간이 오래 걸리면 Segment 축소 필요
+ 
+ DELETE 와 TRUNCATE 의 차이점 
+  - DELETE 는 데이터를 삭제해도 기존에 할당 된 영역 및 HWM 의 위치가 그대로이다.
+  - TRUNCATE 는 자동 COMMIT
+  - TRUNCATE 는 HWM 을 초기화 시킨다.
+  - TRUNCATE 는 MinExtents 설정 값만큼을 제외하고 남은 Extents 는 모두 할당 해제한다.
+  * 전체 데이터를 삭제 시, DELETE 보다 TRUNCATE 를 사용하는 것이 성능면에서 유리하다.
