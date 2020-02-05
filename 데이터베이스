@@ -82,3 +82,34 @@ Migration
  - Windows 운영체제에서 사용하던 프로그램을 Linux 운영체제로 그대로 옮겨 사용하는 것을 의미한다.
  - 단순히 C -> Java 로 언어를 변경하는 것과는 의미가 다르다.
  
+----------------------------------------------------------------------------------
+2020.02.05
+집합연산 
+ - UNION
+ - INTERSECT
+ - MINUS
+ 
+UNION [UNION DISTINCT]
+ - UNION DISTINCT 와 동일한 작업을 수행하므로 중복되는 레코드를 제거해준다.
+UNION ALL
+ - 별도의 중복 제거 과정을 거치지 않고 결과를 보여준다.
+
+MySQL 이 내부적으로 UNION 과 UNION ALL 을 처리하는 과정
+ 1. 최종 UNION [ALL | DISTINCT] 결과에 적합한 임시 테이블(Temporary Table)을 메모리 테이블로 생성
+ 2. UNION | UNION DINTINCT 의 경우, Temporary Table 의 모든 컬럼으로 Unique Hash Index 를 생성
+ 3. 서브 쿼리1 실행 후, Temporary Table 에 복사
+ 4. 서브 쿼리2 실행 후, Temporary Table 에 복사
+ 5. 만약 3,4번 과정에서 Temporary Table 이 특성 크기 이상으로 커질경우 Temporary Table 을 Disk Temporary Table로 변경
+    (이 때, Unique Hash Index 는 Unique B-Tree Index 로 변경)
+ 6. Temporary Table 을 읽어서 Client 에 결과 전송
+ 7. Temporary Table 삭제
+
+UNION DINTINCT 와 UNION ALL 의 차이점
+ - 2번 과정이 수행되어 중복 제거를 위해 Temporary Table 에 Index 를 생성하는가/생성하지 않는가 의 차이
+ - Index 로 인해서 데이터의 건수에 따라 다르지만 1.5배 ~ 4배 가량의 성능 차이로 UNION ALL 이 빠르게 처리된다.
+ - 데이터량이 미세할 경우 메모리 Temporary Table 에 Hash Index 를 사용하기 때문에 속도 차이가 매우 미세하지만,
+   데이터량이 커져서 5번 과정을 거치고 Disk Temporary Table 에 B-Tree Index 를 사용하기 때문에 큰 성능차이가 발생한다.
+ - '중복의 기준'을 고려한다면, UNION 하는 컬럼들의 수가 많아지고 레코드의 사이즈가 커질 수록 두 작업 모두 불리하겠지만,
+   UNION ALL 보다는 UNION 에 더 악영향이 클 것이다.
+   
+※ UNION | UNION ALL 둘 다 좋은 SQL 작성은 아니므로 만약 사용해야 한다면, 최소 필요 컬럼만 SELECT 하는 것이 좋다.
