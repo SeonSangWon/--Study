@@ -13,7 +13,6 @@
    SELECT column명 FROM alias명 WHERE 조인조건;
    
 ---------------------------------------------------------------------
-
 ## DELIMITER(델리미터)
  - '구문 문자'로써 C 또는 JAVA 의 ';'(세미클론)과 같은 의미를 갖는다.
  - 즉, 문법읠 끝을 나타내는 역할
@@ -31,3 +30,23 @@
      DELMITER
     + DELIMITER 를 설정하지 않으면 문장을 구분하기 어렵기 때문에 세미클론이 아닌 $$ 로 설정한 것
     + 프로시저 생성 시, 필수적인 요소는 X
+
+---------------------------------------------------------------------
+2020.01.21
+
+## INNER JOIN, LEFT/RIGHT OUTER JOIN
+
+ - LEFT/RIGHT OUTER JOIN   
+   SELECT   
+          COUNT		AS 고객수   
+    FROM	 TABLE_NAME1   
+    LEFT		OUTER JOIN TABLE_NAME2   
+          ON TABLE_NAME1.A = TABLE_NAME2.A   
+   WHERE		TABLE_NAME1.A BETWEEN '20200101' AND '20200331';
+ - INNER JOIN
+   SELECT   
+          COUNT		AS 고객수   
+    FROM	 TABLE_NAME1   
+   INNER  JOIN TABLE_NAME2   
+          ON TABLE_NAME1.A = TABLE_NAME2.A   
+   WHERE		TABLE_NAME1.A BETWEEN '20200101' AND '20200331';
