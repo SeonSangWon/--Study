@@ -1,0 +1,245 @@
+1. EMP학번 테이블 삭제
+Drop Table emp201507046;
+
+
+
+
+
+
+2. DEPT학번 테이블 삭제
+Drop Table dept201507046;
+
+
+
+
+
+
+3. EMP 테이블의 구조와 데이터가 동일하게 EMP학번 테이블 생성하고,  생성된 테이블의 
+   구조 확인 및 데이터 확인
+Create Table emp201507046
+AS
+Select * From emp;
+
+DESC emp201507046;
+
+Select * From emp201507046;
+
+
+
+
+
+
+4. DEPT 테이블의 구조와 데이터가 동일하게 DEPT학번 테이블 생성하고,  생성된 테이블의 구조 확인 및 데이터 확인
+Create Table dept201507046
+AS
+Select * From dept;
+
+DESC dept201507046;
+
+Select * From dept201507046;
+
+
+
+
+
+
+5. DEPT학번 테이블을 변경
+1) deptno 칼럼에 PK 제약조건 추가
+Alter Table detp20150746
+Add Constraint dept201507046_deptno_pk Primary Key(deptno);
+
+
+
+
+
+6. EMP학번 테이블을 변경
+1) empno 칼럼에 PK 제약조건 추가
+Alter Table emp201507046
+Add Constraint emp201507046_empno_pk Primary Key(empno);
+
+2) deptno 칼럼에 FK 제약조건 추가(DEPT학번 테이블의 deptno 칼럼 참조)
+Alter Table emp201507046
+Add Constraint emp201507046_deptno_fk Foreign Key(deptno)
+References dept201507046(deptno);
+
+
+
+
+
+7. EMP학번 테이블에서 급여가 1300인 사원의 사원번호, 사원이름, 부서이름을 검색해서 
+   화면에 아래와 같이 출력하는 프로시저 작성
+Create OR REPLACE PROCEDURE p_one
+IS
+	v_empno emp201507046.empno%TYPE;
+	v_ename emp201507046.ename%TYPE;
+	v_dname dept201507046.dname%TYPE;
+BEGIN
+	Select e.empno, e.ename, d.dname
+	Into v_empno, v_ename, v_dname
+	From emp201507046 e, dept201507046 d
+	Where e.deptno = d.deptno AND
+	e.sal = 1300;
+	dbms_output.put_line('사원번호 : ' || v_empno || '사원이름 : ' || 
+	v_ename || '부서이름 : ' || v_dname);
+END;
+/
+
+2) 프로시저 실행 및 결과 확인
+EXECUTE p_one
+
+
+
+
+
+8. 사원번호, 사원이름, 직무, 상급자 사원번호, 급여, 부서번호를 입력받아서 EMP학번 
+   테이블에 삽입하는 프로시저 작성 
+
+1) EMP학번 테이블의 모든 데이터 확인
+Select * From emp201507046;
+
+2) 프로시저 생성
+CREATE OR REPLACE PROCEDURE p_two(v_empno NUMBER, v_ename VARCHAR,
+v_job VARCHAR, v_mgr NUMBER, v_sal NUMBER, v_deptno NUMBER)
+IS
+BEGIN
+	INSERT INTO emp201507046(empno,ename,job,mgr,sal,deptno)
+	 VALUES(v_empno, v_ename, v_job, v_mgr, v_sal, v_deptno);
+END;
+/
+
+3) empno=7890, ename=홍선아, job=대리, 상급자 사원번호=7839, 급여=3000, 부서번호=10
+을 입력받아 프로시저 실행
+VARIABLE EMPNO NUMBER
+VARIABLE ENAME VARCHAR2
+VARIABLE JOB VARIABLE
+VARIABLE MRG NUMBER
+VARIABLE SAL NUMBER
+VARIABLE DEPTNO VARIABLE
+EXEC p_two(7890, '홍선아','대리',7839,3000,10);
+
+4) 프로시저 실행 결과 확인
+Select * From emp201507046;
+
+5) EMP학번 테이블의 수정 사항 모두 무효화
+ROLLBACK;
+
+6) EMP학번 테이블의 모든 데이터 확인
+Select * From emp201507046;
+
+
+
+
+
+9. EMP학번 테이블에서 최고급여를 받는 사원이름을 출력하는 함수 작성
+
+1) 함수 작성
+CREATE OR REPLACE FUNCTION f_one RETURN VARCHAR
+IS
+	v_ename emp201507046.ename%TYPE;
+BEGIN
+	Select ename
+	Into v_ename
+	From emp201507046
+	Where sal = (Select MAX(SAL)
+		     From emp201507046);
+RETURN v_ename;
+END f_one;
+/
+
+2) 함수 실행 및 결과 확인
+VARIABLE ENAME VARCHAR2(20)
+EXEC :ENAME := f_one;
+
+PRINT ENAME;
+
+
+
+
+
+10. EMP학번 테이블을 이용하여, 함수 실행 시 입력받은 부서번호의 평균 급여를 구해서 출력하는 함수 작성
+
+1) 함수 작성
+CREATE OR REPLACE FUNCTION f_two(v_deptno NUMBER)RETURN NUMBER
+IS
+	v_avgSal NUMBER;
+BEGIN
+	Select AVG(sal)
+	Into v_avgSal
+	From emp201507046
+	Where deptno = v_deptno;
+RETURN v_avgSal;
+END f_two;
+/
+
+
+
+2) 부서번호=20을 입력받아 함수 실행 및 결과 확인
+VARIABLE DEPTNO NUMBER
+EXEC :DEPTNO := f_two;
+
+PRINT DEPTNO;
+
+
+
+
+
+11. EMP학번 테이블을 이용하여, 프로시저 실행 시 입력받은 사원이름의 부서번호와 급여를 
+   조회해서 출력하는 프로시저 작성 
+
+1) 프로시저 생성
+CREATE OR REPLACE PROCEDURE p_three(v_ename VARCHAR)
+IS
+	v_deptno emp201507046.deptno%TYPE;
+	v_sal emp201507046.sal%TYPE;
+BEGIN
+	Select deptno, sal
+	Into v_deptno, v_sal
+	From emp201507046
+	Where ename = v_ename;
+	dbms_output.put_line('부서번호 : ' || v_deptno || ' 급여 : ' || v_sal);
+END;
+/
+
+2) 'SMITH'를 입력받아 프로시저 실행
+EXECUTE p_three('SMITH');
+
+3) 프로시저 실행 결과 확인
+EXECUTE p_three('SMITH');
+
+
+
+
+
+12. EMP학번 테이블과 DEPT학번 테이블을 이용해서 실행 시 입력받은 사원번호에 해당하는 사원의 사원이름과 부서이름을 출력하는 프로시저 작성
+
+1) 프로시저 작성
+CREATE OR REPLACE PROCEDURE p_four(v_empno NUMBER)
+IS 
+	v_ename emp201507046.ename%TYPE;
+	v_dname dept201507046.dname%TYPE;
+BEGIN	
+	Select e.ename , d.dname
+	Into v_ename, v_dname
+	From emp201507046 e, dept201507046 d
+	Where e.deptno = d.deptno AND e.empno = v_empno;
+	dbms_output.put_line('<<< 조회결과 >>>');
+	dbms_output.put_line('사원 이름 : ' || v_ename);
+	dbms_output.put_line('부서 이름 : ' || v_dname);
+END;
+/
+
+2) 사원번호 7499의 값을 입력받아 프로시저 실행
+EXECUTE p_four(7499);
+
+3) 프로시저 실행 결과 확인
+
+
+
+
+
+
+
+
+
+
+

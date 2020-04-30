@@ -1,0 +1,179 @@
+7. RENT(대여) 테이블의 대여료가 수정될 경우(insert, update, delete), 고객별 대여금액을 수정하는 트리거를 작성하여라.
+1) 실행 결과를 저장할 테이블 vipcust 생성
+Create Table vipcust201507046(
+no number(3) Not Null,
+sumrfee number(5),
+Primary Key(no)
+);
+
+DESC vipcust201507046; 
+
+2) 현재 대여(rent) 테이블에서 고객별로 대여료(rrentfee)의 합을 구하여
+ vipcust 테이블의 sumrfee에 입력하는 프로시저 생성
+Create OR REPLACE PROCEDURE p1_201507046_0604
+IS
+	v_no rent201507046.no%TYPE;
+	v_sumrfee vipcust201507046.sumrfee%TYPE;
+BEGIN
+	INSERT INTO vipcust201507046
+	Select no, SUM(rrentfee)
+	From rent201507046
+	Group By no;
+END;
+/
+
+3) 프로시저를 실행하고, 결과를 확인
+EXEC p1_201507046_0604;
+
+Select * From vipcust201507046;
+
+
+4) RENT(대여) 테이블의 대여료가 입력, 수정, 삭제될 경우,
+ vipcust 테이블의 고객별 대여금액을 수정 하고 고객(cust) 테이블의 마일리즈를 수정하는 트리거 생성 
+   (4번, 6번 함수를 참조한다.)  
+Create OR REPLACE TRIGGER t1_201507046_0604
+after insert or update or delete on rent201507046
+for each row
+declare
+	v_mil cust201507046.mil%type;
+begin
+	if inserting then
+		update vipcust201507046
+		set sumrfee = sumrfee + :new.rrentfee
+		where no = :new.no;
+	elsif updating then
+		update vipcust201507046
+		set sumrfee = sumrfee - :old.rrentfee
+		where no = :old.no;
+
+		v_mil := f1_201507046_0528(:old.no, :old.rrentfee);
+
+		update cust201507046
+		set mil = mil - v_mil
+		where no = :old.no;
+
+		update vipcust201507046
+		set sumrfee = sumrfee + :new.rrentfee
+		where no = :new.no;
+
+		v_mil := f1_201507046_0528(:new.no, :new.rrentfee);
+
+		update cust201507046
+		set mil = mil + v_mil
+		where no = :new.no;
+	elsif deleting then
+		update vipcust201507046
+		set sumrfee = sumrfee - :old.rrentfee
+		where no = :old.no;
+
+		v_mil := f1_201507046_0528(:old.no, :old.rrentfee);
+		update cust201507046
+		set mil = mil - v_mil
+		where no = :old.no;
+	end if;
+end;
+/
+
+5) 고객번호 101, 비디오번호 11, 대여료 500을 입력받아서
+ 데이터 추가를 하는 6번 프로  시저를 실행하고, 결과(cust, rent, vipcust 테이블)를 확인하여라.
+EXEC p2_201507046_0528(101, 11, 500);
+
+Select * From cust201507046;
+Select * From rent201507046;
+Select * From vipcust201507046; 
+
+6) 고객번호 104, 비디오번호 5, 대여료 500을 입력받아서
+ 데이터 추가를 하는 6번 프로시저를 실행하고, 결과(cust, rent, vipcust 테이블)를 확인하여라.
+EXEC p2_201507046_0528(104, 5, 500);
+
+Select * From cust201507046;
+Select * From rent201507046;
+Select * From vipcust201507046; 
+
+
+7) 고객번호 101, 비디오번호 11인 대여료를 1000으로 수정하는 명령문을 실행하고,
+ 결과(cust, rent, vipcust 테이블)를 확인하여라.
+Update rent201507046
+Set rrentfee = 1000
+Where no = 101 AND vdono = 11;
+
+
+8) 고객번호 101, 비디오번호 11인 데이터를 삭제하는 명령문을 실행하고,
+ 결과(cust, rent, vipcust 테이블)를 확인하여라.
+Delete From rent201507046
+Where no = 101 AND vdono = 11;
+
+
+8. 1) 비디오 번호를 입력하면 대여한 고객이름, 대여일, 반납일, 비디오 이름을 화면에 출력하는 프로시저와
+ 고객이름을 입력하면 대여일, 반납일, 비디오 이름을 화면에 출력하는 프로시저를
+ 같은 이름으로 작성하는 패키지를 구성하여라.
+Create OR REPLACE PACKAGE pack_201507046_0604
+IS
+PROCEDURE video(v_vdono number);
+PROCEDURE video(v_name varchar);
+END;
+/
+
+
+Create OR REPLACE PACKAGE BODY pack_201507046_0604
+IS
+PROCEDURE video(v_vdono number)
+IS
+	v_name cust201507046.name%TYPE;
+	v_rdate rent201507046.rdate%TYPE;
+	v_rrtdate rent201507046.rrtdate%TYPE;
+	v_vdoname video201507046.vdoname%TYPE;
+	CURSOR sangwon IS
+	Select c.name, r.rdate, r.rrtdate, v.vdoname
+	From cust201507046 c, rent201507046 r, video201507046 v
+	Where c.no = r.no AND r.vdono = v.vdono AND v.vdono = v_vdono;
+BEGIN
+	OPEN sangwon;
+	LOOP
+	 
+	 FETCH sangwon INTO v_name, v_rdate, v_rrtdate, v_vdoname;
+	 EXIT WHEN sangwon%NOTFOUND;
+		dbms_output.put_line('고객이름 : ' || v_name);
+		dbms_output.put_line('대여일 : ' || v_rdate);
+		dbms_output.put_line('반납일 : ' || v_rrtdate);
+		dbms_output.put_line('비디오 이름 : ' || v_vdoname);
+	END LOOP;	
+CLOSE sangwon;
+END;
+PROCEDURE video(v_name varchar)
+IS
+	v_rdate rent201507046.rdate%TYPE;
+	v_rrtdate rent201507046.rrtdate%TYPE;
+	v_vdoname video201507046.vdoname%TYPE;
+	CURSOR sangwon IS
+	Select r.rdate, r.rrtdate, v.vdoname
+	From rent201507046 r, video201507046 v
+	Where r.vdono = v.vdono AND r.no = (Select no
+				From cust201507046
+				Where name = v_name);
+BEGIN
+	OPEN sangwon;
+	LOOP
+	 FETCH sangwon INTO v_rdate, v_rrtdate, v_vdoname;
+	 EXIT WHEN sangwon%NOTFOUND;
+		dbms_output.put_line('대여일 : ' || v_rdate);
+		dbms_output.put_line('반납일 : ' || v_rrtdate);
+		dbms_output.put_line('비디오 이름 : ' || v_vdoname);
+	END LOOP;	
+CLOSE sangwon;
+END;
+END;	
+/
+
+2) 비디오 번호 5를 입력받아서 실행하고, 결과를 확인하여라.
+EXEC pack_201507046_0604.video(5);
+
+3) 학생이름 김진수를 입력받아서 실행하고, 결과를 확인하여라.
+EXEC pack_201507046_0604.video('김진수');
+
+
+
+
+
+
+

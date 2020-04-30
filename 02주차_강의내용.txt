@@ -1,0 +1,219 @@
+참조 데이터 타입
+-%TYPE
+-%ROWTYPE
+
+%TYPE
+- 변수명 테이블명.칼럼명%TYPE;
+> v_empno emp.empno%TYPE;
+
+%ROWTYPE
+- 변수명 테이블명%ROWTYPE;
+> v_emp emp%ROWTYPE;
+
+특정 칼럼만 사용하고 싶을 경우
+- v_emp.sal := sal x 12; 
+.칼럼명을 붙여서 사용한다.
+-------------------------------------
+PL/SQL블록에서의 SELECT문 사용
+-Select 칼럼명 [칼럼명]
+ Into 변수명[변수명] << 필수
+ From 테이블명
+
+>Select sal, job, deptno
+ From emp
+ Where ename = 'SMITH';
+
+이름이 스미스인 사람의 
+sal, job, deptno를 조회
+그러나 PL/SQL에서는 Select로
+조회만하고 처리가 불가능함.
+그러므로 into 변수명을 사용하여
+조회하는 목록의 변수명을 지정한다.
+
+>>
+Declare
+  v_sal emp.sal%TYPE;
+  v_job emp.job%TYPE;
+  v_deptno emp.deptno%TYPE;
+Begin
+  Select sal, job, deptno
+  Into v_sal, v_job, v_deptno
+  From emp
+  Where ename = 'SMITH';
+  v_sal := v_sal *1.1;
+  ※조회를 한 후, 계산하여 업데이트가
+   가능하다
+End;
+-------------------------------------
+PL/SQL블록에서의 INSERT문
+-Insert into 테이블명(칼럼명1...)
+Values(값1, 값2..);
+
+Declare
+  v_deptno dept.deptno%TYPE;
+Begin
+  Select MAX(detpno)
+  Into v_deptno
+  From dept;
+  IF v_deptno <= 40 THEN
+    Insert into dept
+    Values(50, '인사부', '서울');
+  END IF;
+End;
+-------------------------------------
+PL/SQL블록에서의 UPDATE문
+-Update 테이블명
+ Set 칼럼명 = 값
+ Where 조건;
+-------------------------------------
+PL/SQL블록에서의 DELETE문
+-Delete From 테이블명
+ Where 조건;
+-------------------------------------
+Select sal, job, deptno
+Into v_sal, v_job, v_deptno
+From emp;
+
+=v_sal에는 한 개의 값만
+가져올 수있는데 해당 SQL문의 경우
+14개의 데이터를 가져오기 때문에
+에러가 발생한다.
+※가져오는 결과값이 항상 1개일 때만
+사용한다.
+-------------------------------------
+서브쿼리를 이용한 테이블 생성
+
+Create Table emp201507046
+AS
+Select *
+From emp;
+
+>원래의 emp테이블에서 emp201507046
+테이블로 구조와 데이터 복제하여 실습
+※제약조건은 복제하지 못한다.
+-------------------------------------
+트랜잭션
+- 데이터 처리의 논리적 단위
+
+DDL,DCL : 하나의 명령어가 하나의
+	  트랜잭션
+DML : 하나 이상의 명렁어가 하나의
+      트랜잭션
+
+Create / Alter / Drop 
+
+- COMMIT
+- ROLLBACK
+- SAVEPOINT
+-------------------------------------
+NULL
+- 이용할 수 없는 값
+- 할당되지 않은 값
+- 안 알려져 있거나 적용 불가능한 값
+- 숫자 0 이나 문자 공백과는 다름
+- 산술 연산자를 이용해서 계산 불가능
+> IS NULL 연산자를 사용하여 비교
+-------------------------------------
+COUNT 함수
+- 데이터의 개수를 반환(null X)
+- * : null,중복 포함
+- DISTINCT : 중복된 값 제외
+- ALL : 중복 모두 포함
+-------------------------------------
+제어문
+
+IF문
+-IF 조건 THEN
+	실행문의 집합
+ END IF;
+
+-END IF 절을 생략하면 에러 발생 
+
+
+IF THEN ELSE문
+-IF 조건 THEN
+	실행문의 집합1
+ ELSE
+	실행문의 집합2
+ END IF;
+
+
+IF THEN ELSIF문
+-IF 조건1 THEN
+	실행문의 집합1
+ ELSIF 조건2 THEN
+	실행문의 집합2
+ ELSIF 조건3 THEN
+	실행문의 집합3
+ [ELSE 실행문의 집합 n+1]
+ END IF;
+
+
+CASE문
+-CASE
+   WHEN 조건1 THEN 실행문의 집합1;
+   WHEN 조건2 THEN 실행문의 집합2;
+   ...
+   WHEN 조건n THEN 실행문의 집합n;
+   [ELSE 실행문의 집합 n+1]
+ END CASE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

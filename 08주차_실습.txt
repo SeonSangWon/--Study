@@ -1,0 +1,113 @@
+1. emp학번c 테이블을 삭제하시오
+> Drop Table emp201507046c;
+
+2. dept학번c 테이블을 삭제하시오
+> Drop Table detp201507046c
+
+3. emp테이블의 구조와 데이터를 그대로 복제하여 emp학번 테이블을 생성하시오
+>Create Table emp201507046
+  AS
+  Select * From emp;
+
+4. dept테이블의 구조와 데이터를 그대로 복제하여 dept학번 테이블을 생성하시오
+>Create Table dept201507046
+  AS
+  Select * From dept;
+
+5. dept학번 테이블의 deptno칼럼을 기본키로 설정하시오.
+>Alter Table dept201507046
+  Add Constraint dept201507046.deptno.pk Primary Key(deptno);
+
+6.
+6-1 emp학번 테이블의 empno칼럼을 기본키로 설정하시오.
+>Alter Table emp201507046
+  Add Constraint emp201507046.empno.pk Primary Key(empno);
+
+6-2 emp학번 테이블 deptno칼럼을 dept학번 테이블의 deptno칼럼의 외래키로 설정하시오.
+>Alter Table emp201507046
+  Add Constraint emp201507046.deptno.fk Foreign Key(deptno)
+  References dept201507046(deptno); 
+
+7. 이름 과 학번을 입력받아 다음과 같이 출력하는 프로시저를 작성하시오.
+Create OR REPLACE PROCEDURE p_one(v_name varchar, v_hak number)
+IS
+BEGIN
+	dbms_output.put_line('이름 : ' || v_name);
+	dbms_output.put_line('학번 : ' || v_hak);
+END;
+/
+
+8. emp학번 테이블에서 가장 늦게 입사한 사원의 사원이름을 출력하는 함수를 작성하시오.
+Create OR REPLACE FUNCTION f_one RETURN varchar
+IS
+	v_ename emp201507046.ename%TYPE;
+BEGIN
+	Select ename
+	Into v_ename
+	From emp201507046
+	Where hiredate = (Select MAX(hiredate)
+			From emp201507046);
+RETURN v_ename;
+END f_one;
+/
+
+9. 급여가 2000이상인 사원의 사원번호, 사원이름, 부서이름을 출력하고, 부서이름을 내림차순하여
+출력하는 프로시저를 생성하시오.
+Create OR REPLACE PROCEDURE p_two
+IS
+	v_empno emp201507046.empno%TYPE;
+	v_ename emp201507046.ename%TYPE;
+	v_dname dept201507046.dname%TYPE;
+	CURSOR emp_cursor IS
+	Select e.empno, e.ename, d.dname
+	From emp201507046 e, dept201507046 d
+	Where e.deptno = d.deptno AND e.sal >= 2000
+	Order By d.dname DESC;
+BEGIN
+	OPEN emp_cursor;
+	LOOP	
+		FETCH emp_cursor INTO v_empno, v_ename, v_dname;
+		EXIT WHEN emp_cursor%NOTFOUND;
+	dbms_output.put_line('사원번호 : ' || v_empno || ' ' || '사원이름 : ' || v_ename || ' ' || 
+			'부서이름 : ' || v_dname);
+	END LOOP;
+CLOSE emp_cursor;
+END;
+/
+
+10. 직업을 입력하여 다음과 같이 출력하는 프로시저를 생성하시오.
+※각 각의 에러에 맞게 출력
+Create OR REPLACE PROCEDURE p_three(v_job varchar)
+IS
+	v_emp emp201507046%ROWTYPE;
+	v_count number;
+BEGIN
+	Select *
+	Into v_emp
+	From emp201507046
+	Where job = v_job;
+	Select COUNT(*)
+	Into v_count
+	From emp201507046
+	Where job = v_job;
+	dbms_output.put_line('<<< 조회결과 >>>');
+	dbms_output.put_line('사원번호 : ' || v_emp.empno);
+	dbms_output.put_line('사원이름 : ' || v_emp.ename);
+	dbms_output.put_line('급    여   : ' || v_emp.sal);
+	dbms_output.put_line('입  사  일 : ' || v_emp.hiredate);
+	dbms_output.put_line('부서번호 : ' || v_emp.deptno);
+	dbms_output.put_line('<<<데이터 처리 >>>');
+	dbms_output.put_line('데이터 처리 갯수 :' || v_count);
+EXCEPTION
+	WHEN NO_DATA_FOUND THEN	
+	dbms_output.put_line('<<< ERROR >>>');
+	dbms_output.put_line('조회된 데이터가 없습니다.!!');
+	WHEN TOO_MANY_ROWS THEN
+	dbms_output.put_line('<<< ERROR >>>');
+	dbms_output.put_line('조회된 데이터가 너무 많습니다.!');
+	WHEN OTHERS THEN
+	dbms_output.put_line('<<< ERROR >>>');
+	dbms_output.put_line('에러코드 : ' || TO_CHAR(SQLCODE));
+	dbms_output.put_line('에러내용 : ' || SQLERRM);
+END;
+/
